@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Energy Meter Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&family=Fira+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #28221d;
+      color: #ff9900;
+      font-family: 'Roboto Mono', monospace;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .dashboard-container {
+      background: #4a3a28;
+      border-radius: 18px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.15);
+      padding: 32px 24px;
+      max-width: 400px;
+      width: 90vw;
+      margin-top: 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .dashboard-title {
+      font-size: 1.2rem;
+      font-family: 'Fira Mono', 'Roboto Mono', monospace;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 4px;
+      letter-spacing: 1px;
+      color: #ff9900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dashboard-desc {
+      font-size: 0.85rem;
+      color: #c67c2b;
+      text-align: center;
+      margin-bottom: 12px;
+      font-family: 'Fira Mono', 'Roboto Mono', monospace;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .meter-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #6b4e2e;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 0;
+    }
+    .meter-label {
+      font-size: 1.1rem;
+      color: #c67c2b;
+    }
+    .meter-value {
+      font-size: 2.1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #ff9900;
+      min-width: 90px;
+      text-align: right;
+    }
+    @media (max-width: 600px) {
+      .dashboard-container {
+        padding: 18px 6vw;
+        max-width: 98vw;
+      }
+      .meter-value {
+        font-size: 1.3rem;
+        min-width: 50px;
+      }
+      .dashboard-title {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <div class="dashboard-title">Energy Meter Dashboard</div>
+    <!--<div class="dashboard-desc">WORKSHOP 1 DENPASAR</div>-->
+    <div class="meter-row"><span class="meter-label">Tegangan</span><span class="meter-value" id="voltage">0 V</span></div>
+    <div class="meter-row"><span class="meter-label">Arus</span><span class="meter-value" id="current">0 A</span></div>
+    <div class="meter-row"><span class="meter-label">Daya</span><span class="meter-value" id="power">0 W</span></div>
+    <div class="meter-row"><span class="meter-label">Energi</span><span class="meter-value" id="kwh">0.000 kWh</span></div>
+    <div class="meter-row"><span class="meter-label">Power Factor</span><span class="meter-value" id="pf">0.00</span></div>
+    <div class="meter-row"><span class="meter-label">Rupiah</span><span class="meter-value" id="idr">Rp 0</span></div>
+  </div>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script>
+    // MQTT config
+    const brokerUrl = 'ws://broker.emqx.io:8083/mqtt';
+    const mqtt_username = 'Test1234';
+    const mqtt_password = 'Test1234';
+    const tarifPerKwh = 1500;
+    let totalCost = 0;
+    let state = {
+      voltage: 0,
+      current: 0,
+      power: 0,
+      kwh: 0,
+      pf: 0
+    };
+
+    function updateUI() {
+      document.getElementById('voltage').textContent = state.voltage + ' V';
+      document.getElementById('current').textContent = state.current + ' A';
+      document.getElementById('power').textContent = state.power + ' W';
+      document.getElementById('kwh').textContent = state.kwh + ' kWh';
+      document.getElementById('pf').textContent = state.pf;
+      totalCost = parseFloat(state.kwh) * tarifPerKwh;
+      document.getElementById('idr').textContent = 'Rp ' + totalCost.toLocaleString('id-ID', {maximumFractionDigits:0});
+    }
+
+    let client;
+    let reconnectTimeout;
+    function setStatus(msg, color) {
+      document.getElementById('mqtt-status').textContent = msg;
+      document.getElementById('mqtt-status').style.color = color || '#ff9900';
+    }
+    function connectMQTT() {
+      //setStatus('Connecting...', '#ffe08a');
+      client = mqtt.connect(brokerUrl, {
+        //username: mqtt_username,
+        //password: mqtt_password,
+        connectTimeout: 4000,
+        clientId: 'webClient_' + Math.random().toString(16).substr(2, 8),
+        clean: true
+      });
+      client.on('connect', function () {
+        //setStatus('Connected', '#00e676');
+        client.subscribe('alat1/tegangan');
+        client.subscribe('alat1/arus');
+        client.subscribe('alat1/daya');
+        client.subscribe('alat1/kwh');
+        client.subscribe('alat1/pf');
+        console.log('MQTT connected and subscribed');
+      });
+      client.on('error', function (err) {
+        setStatus('MQTT Error: ' + (err && err.message ? err.message : 'Unknown'), '#ff5252');
+        console.error('MQTT error:', err);
+        client.end(); retryConnect();
+      });
+      client.on('close', function () {
+        //setStatus('Disconnected. Reconnecting...', '#ffe08a');
+        console.warn('MQTT connection closed');
+        retryConnect();
+      });
+      client.on('message', function (topic, message) {
+        const payload = parseFloat(message.toString());
+        console.log('MQTT message:', topic, payload);
+        if (topic === 'alat1/tegangan') {
+          state.voltage = payload.toFixed(1);
+        } else if (topic === 'alat1/arus') {
+          state.current = payload.toFixed(2);
+        } else if (topic === 'alat1/daya') {
+          state.power = payload.toFixed(0);
+        } else if (topic === 'alat1/kwh') {
+          state.kwh = payload.toFixed(3);
+        } else if (topic === 'alat1/pf') {
+          state.pf = payload.toFixed(2);
+        }
+        updateUI();
+      });
+    }
+    function retryConnect() {
+      clearTimeout(reconnectTimeout);
+      reconnectTimeout = setTimeout(connectMQTT, 3000);
+    }
+    connectMQTT();
+    updateUI();
+  </script>
+</body>
+</html>
