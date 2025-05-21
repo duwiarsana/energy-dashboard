@@ -103,6 +103,7 @@
   <script>
     // MQTT config
     const brokerUrl = 'wss://broker.emqx.io:8084/mqtt';
+    const mqttClientId = 'energyDashboard_web';  // ID tetap untuk client MQTT
     const tarifPerKwh = 1500; // Tarif listrik per kWh
     let totalCost = 0;
     let state = {
@@ -135,8 +136,8 @@
         //username: mqtt_username,
         //password: mqtt_password,
         connectTimeout: 4000,
-        clientId: 'webClient_' + Math.random().toString(16).substr(2, 8),
-        clean: true
+        clientId: mqttClientId,
+        clean: false
       });
       client.on('connect', function () {
         //setStatus('Connected', '#00e676');
