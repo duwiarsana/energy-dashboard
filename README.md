@@ -26,10 +26,10 @@ Sebuah dashboard untuk memantau konsumsi energi listrik secara real-time menggun
 Edit variabel berikut di file `index.html` sesuai kebutuhan:
 ```javascript
 const brokerUrl = 'ws://broker.emqx.io:8083/mqtt';
-const mqtt_username = 'Test1234';
-const mqtt_password = 'Test1234';
 const tarifPerKwh = 1500; // Sesuaikan dengan tarif listrik per kWh
 ```
+
+> **Catatan**: Koneksi MQTT tidak menggunakan username/password. Jika broker Anda membutuhkan autentikasi, aktifkan baris `mqtt_username` dan `mqtt_password` di `index.html`.
 
 ## Topik MQTT
 Dashboard ini berlangganan ke topik-topik berikut:
