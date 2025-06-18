@@ -102,7 +102,7 @@
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script>
     // MQTT config
-    const brokerUrl = 'wss://broker.emqx.io:8084/mqtt';
+    const brokerUrl = 'ws://202.74.74.42:8084/mqtt';
     const mqttClientId = 'energyDashboard_web';  // ID tetap untuk client MQTT
     const tarifPerKwh = 1500; // Tarif listrik per kWh
     let totalCost = 0;
@@ -141,11 +141,11 @@
       });
       client.on('connect', function () {
         //setStatus('Connected', '#00e676');
-        client.subscribe('alat1/tegangan');
-        client.subscribe('alat1/arus');
-        client.subscribe('alat1/daya');
-        client.subscribe('alat1/kwh');
-        client.subscribe('alat1/pf');
+        client.subscribe('pzem/voltage');
+        client.subscribe('pzem/current');
+        client.subscribe('pzem/power');
+        client.subscribe('pzem/energy');
+        client.subscribe('pzem/pf');
         console.log('MQTT connected and subscribed');
       });
       client.on('error', function (err) {
@@ -161,15 +161,15 @@
       client.on('message', function (topic, message) {
         const payload = parseFloat(message.toString());
         console.log('MQTT message:', topic, payload);
-        if (topic === 'alat1/tegangan') {
+        if (topic === 'pzem/voltage') {
           state.voltage = payload.toFixed(1);
-        } else if (topic === 'alat1/arus') {
+        } else if (topic === 'pzem/current') {
           state.current = payload.toFixed(2);
-        } else if (topic === 'alat1/daya') {
+        } else if (topic === 'pzem/power') {
           state.power = payload.toFixed(0);
-        } else if (topic === 'alat1/kwh') {
+        } else if (topic === 'pzem/energy') {
           state.kwh = payload.toFixed(3);
-        } else if (topic === 'alat1/pf') {
+        } else if (topic === 'pzem/pf') {
           state.pf = payload.toFixed(2);
         }
         updateUI();
