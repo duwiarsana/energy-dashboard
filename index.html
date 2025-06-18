@@ -141,11 +141,11 @@
       });
       client.on('connect', function () {
         //setStatus('Connected', '#00e676');
-        client.subscribe('rumah1/voltage');
-        client.subscribe('rumah1/current');
-        client.subscribe('rumah1/power');
-        client.subscribe('rumah1/energy');
-        client.subscribe('rumah1/power_factor');
+        client.subscribe('pzem/voltage');
+        client.subscribe('pzem/current');
+        client.subscribe('pzem/power');
+        client.subscribe('pzem/energy');
+        client.subscribe('pzem/power_factor');
         console.log('MQTT connected and subscribed');
       });
       client.on('error', function (err) {
