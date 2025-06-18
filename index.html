@@ -161,15 +161,15 @@
       client.on('message', function (topic, message) {
         const payload = parseFloat(message.toString());
         console.log('MQTT message:', topic, payload);
-        if (topic === 'rumah1/voltage') {
+        if (topic === 'pzem/voltage') {
           state.voltage = payload.toFixed(1);
-        } else if (topic === 'rumah1/current') {
+        } else if (topic === 'pzem/current') {
           state.current = payload.toFixed(2);
-        } else if (topic === 'rumah1/power') {
+        } else if (topic === 'pzem/power') {
           state.power = payload.toFixed(0);
-        } else if (topic === 'rumah1/energy') {
+        } else if (topic === 'pzem/energy') {
           state.kwh = payload.toFixed(3);
-        } else if (topic === 'rumah1/power_factor') {
+        } else if (topic === 'pzem/power_factor') {
           state.pf = payload.toFixed(2);
         }
         updateUI();
